@@ -15,13 +15,15 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using JWT.Models.ViewModels;
 using System.Text;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace JWT
 {
     public class Startup
     {
-         private const string SecretKey = "iNivDmHLpUA223sqsfhqGbMRdRj1PVkH"; // todo: get this from somewhere secure
-    private readonly SymmetricSecurityKey _signingKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(SecretKey));
+        private const string SecretKey = "iNivDmHLpUA223sqsfhqGbMRdRj1PVkH"; // todo: get this from somewhere secure
+        private readonly SymmetricSecurityKey _signingKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(SecretKey));
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -45,27 +47,42 @@ namespace JWT
             services.AddDefaultIdentity<IdentityUser>()
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
-                var jwtAppSettingsOptions = Configuration.GetSection(nameof(JwtIssuerOptions));
+            var jwtAppSettingsOptions = Configuration.GetSection(nameof(JwtIssuerOptions));
             services.Configure<JwtIssuerOptions>(options =>
 {
     options.Issuer = jwtAppSettingsOptions[nameof(JwtIssuerOptions.Issuer)];
     options.Audience = jwtAppSettingsOptions[nameof(JwtIssuerOptions.Audience)];
     options.SigningCredentials = new SigningCredentials(_signingKey, SecurityAlgorithms.HmacSha256);
-    options.AddPolicy("ApiUserPolicy", policy => policy.RequireClaim("JwtRole", "ID"));
 
 });
-var tokenValidationParameters = new TokenValidationParameters
-{
-    ValidateIssuer = true,
-    ValidIssuer = jwtAppSettingsOptions[nameof(JwtIssuerOptions.Issuer)],
-    ValidateAudience = true,
-    ValidAudience = jwtAppSettingsOptions[nameof(JwtIssuerOptions.Audience)],
-    ValidateIssuerSigningKey = true,
-    IssuerSigningKey = _signingKey,
-    RequireExpirationTime = false,
-    ValidateLifetime = true,
-    ClockSkew = TimeSpan.Zero
-};
+            services.AddAuthorization(options =>
+                  {
+                      options.AddPolicy("ApiUserPolicy", policy => policy.RequireClaim(Helpers.Constants.Strings.JwtClaimIdentifiers.Rol, Helpers.Constants.Strings.JwtClaims.ApiAccess));
+                  });
+
+            var tokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidIssuer = jwtAppSettingsOptions[nameof(JwtIssuerOptions.Issuer)],
+                ValidateAudience = true,
+                ValidAudience = jwtAppSettingsOptions[nameof(JwtIssuerOptions.Audience)],
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = _signingKey,
+                RequireExpirationTime = false,
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.Zero
+            };
+            services.AddAuthentication(options =>
+            {
+                options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = tokenValidationParameters;
+                options.Audience = jwtAppSettingsOptions[nameof(JwtIssuerOptions.Audience)];
+                options.RequireHttpsMetadata = bool.Parse(jwtAppSettingsOptions[nameof(JwtIssuerOptions.RequireHttpsMetadata)]);
+            });
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
 
