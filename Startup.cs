@@ -83,6 +83,20 @@ namespace JWT
                 options.Audience = jwtAppSettingsOptions[nameof(JwtIssuerOptions.Audience)];
                 options.RequireHttpsMetadata = bool.Parse(jwtAppSettingsOptions[nameof(JwtIssuerOptions.RequireHttpsMetadata)]);
             });
+            services.AddScoped<Services.IJwtFactory, Services.JwtFactory>();
+     services.AddCors(options =>
+    {
+        options.AddPolicy("AllowAll",
+            builder =>
+            {
+                builder
+                .AllowAnyOrigin() 
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials();
+            });
+    });
+
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
 
@@ -100,12 +114,11 @@ namespace JWT
                 app.UseHsts();
             }
 
-            app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseCookiePolicy();
 
             app.UseAuthentication();
-
+            app.UseCors("AllowAll");
             app.UseMvc(routes =>
             {
                 routes.MapRoute(

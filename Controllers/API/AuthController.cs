@@ -9,16 +9,16 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 
-namespace JWT.API
+namespace JWT.Controllers.API
 {
-    [Route("api/]controller[")]
+    [Route("api/[controller]")]
     public class AuthController : Controller
     {
-        private readonly UserManager<AppUser> _userManager;
+        private readonly UserManager<IdentityUser> _userManager;
         private readonly IJwtFactory _jwtFactory;
         private readonly JwtIssuerOptions _jwtOptions;
 
-        public AuthController(UserManager<AppUser> userManager, IJwtFactory jwtFactory, IOptions<JwtIssuerOptions> jwtOptions)
+        public AuthController(UserManager<IdentityUser> userManager, IJwtFactory jwtFactory, IOptions<JwtIssuerOptions> jwtOptions)
         {
             _userManager = userManager;
             _jwtFactory = jwtFactory;
