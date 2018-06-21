@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using JWT.Models.Data;
@@ -18,9 +19,10 @@ namespace JWT.Controllers.Profile
     {
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpPost("login")]
-        public string ProfileDetails()
+        public JsonResult ProfileDetails()
         {
-           return "YOU CAN SEE THE DATA";
+            var List = new List<string> () {"test", "test2", "test3"};
+           return Json(List);
         }
     }
 }
