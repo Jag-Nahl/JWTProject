@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using JWT.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace JWT.Controllers
 {
@@ -15,8 +16,8 @@ namespace JWT.Controllers
         {
             return View();
         }
-        
-        [Authorize]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+
         public IActionResult About()
         {
             ViewData["Message"] = "Your application description page.";
